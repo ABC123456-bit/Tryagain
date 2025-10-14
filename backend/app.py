@@ -97,5 +97,67 @@ def feedback_analysis():
         "csv_data": csv_data
     })
 
+@app.route('/demo/academic', methods=['GET'])
+def demo_academic():
+    try:
+        df = pd.read_csv('../sample_data/academic_data.csv')
+    except Exception as e:
+        return jsonify({"error": f"Failed to load demo data: {str(e)}"}), 500
+
+    if 'Attendance' in df.columns and 'Total' in df.columns:
+        X = df[['Attendance']]
+        y = df['Total']
+        model = LinearRegression()
+        model.fit(X, y)
+        df['Predicted_Total'] = model.predict(X).round(2)
+
+    avg_marks = df['Total'].mean() if 'Total' in df.columns else 0
+    pass_count = df[df['Total'] >= 40].shape[0] if 'Total' in df.columns else 0
+    fail_count = df[df['Total'] < 40].shape[0] if 'Total' in df.columns else 0
+    total_students = df.shape[0]
+
+    dept_avg = df.groupby('Department')['Total'].mean().round(2).to_dict() if 'Department' in df.columns else {}
+
+    columns_to_select = ['Student_Name', 'Total']
+    if 'Predicted_Total' in df.columns:
+        columns_to_select.append('Predicted_Total')
+    
+    student_scores = df[columns_to_select].to_dict(orient='records') if 'Student_Name' in df.columns else []
+
+    return jsonify({
+        "kpis": {
+            "average_marks": round(avg_marks,2),
+            "pass_count": pass_count,
+            "fail_count": fail_count,
+            "total_students": total_students
+        },
+        "department_avg": dept_avg,
+        "student_scores": student_scores
+    })
+
+@app.route('/demo/feedback', methods=['GET'])
+def demo_feedback():
+    try:
+        df = pd.read_csv('../sample_data/feedback_data.csv')
+    except Exception as e:
+        return jsonify({"error": f"Failed to load demo data: {str(e)}"}), 500
+
+    if 'Feedback' not in df.columns:
+        return jsonify({"error": "Demo data missing 'Feedback' column"}), 500
+
+    sentiments = {"positive":0, "neutral":0, "negative":0}
+    for feedback in df['Feedback']:
+        analysis = TextBlob(str(feedback))
+        if analysis.sentiment.polarity > 0.1:
+            sentiments['positive'] += 1
+        elif analysis.sentiment.polarity < -0.1:
+            sentiments['negative'] += 1
+        else:
+            sentiments['neutral'] += 1
+
+    return jsonify({
+        "sentiments": sentiments
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

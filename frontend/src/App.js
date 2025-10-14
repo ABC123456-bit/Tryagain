@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bar, Pie } from "react-chartjs-2";
 import 'chart.js/auto';
 
 const API_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:8080' 
-  : `https://${window.location.hostname.replace(':5000', ':8080')}`;
+  : `${window.location.protocol}//${window.location.hostname}:8080`;
 
 function App() {
   const [file, setFile] = useState(null);
@@ -14,6 +14,34 @@ function App() {
   const [feedbackFile, setFeedbackFile] = useState(null);
   const [feedbackSentiments, setFeedbackSentiments] = useState(null);
   const [message, setMessage] = useState("");
+
+  const loadDemoData = async () => {
+    setMessage("Loading demo data...");
+    
+    try {
+      const academicRes = await fetch(`${API_URL}/demo/academic`);
+      if (academicRes.ok) {
+        const data = await academicRes.json();
+        setKpis(data.kpis);
+        setDeptData(data.department_avg);
+        setStudentScores(data.student_scores);
+      }
+
+      const feedbackRes = await fetch(`${API_URL}/demo/feedback`);
+      if (feedbackRes.ok) {
+        const data = await feedbackRes.json();
+        setFeedbackSentiments(data.sentiments);
+      }
+
+      setMessage("Demo data loaded successfully! ✅");
+    } catch (error) {
+      setMessage("Error loading demo data. Backend may not be running.");
+    }
+  };
+
+  useEffect(() => {
+    loadDemoData();
+  }, []);
 
   const handleUpload = async () => {
     if (!file) return setMessage("Please select an academic CSV file!");
@@ -95,36 +123,50 @@ function App() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">AI Academic Analytics Dashboard</h1>
 
-      <div className="w-full max-w-2xl bg-white p-6 rounded shadow mb-6">
-        <h2 className="text-xl font-semibold mb-2 text-gray-700">Academic Data Analysis</h2>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="mb-2 p-2 border rounded w-full"
-        />
+      <div className="w-full max-w-2xl bg-gradient-to-r from-green-500 to-blue-500 p-6 rounded shadow mb-6 text-white">
+        <h2 className="text-2xl font-bold mb-2">🎯 Demo Mode - Sample Data Loaded</h2>
+        <p className="mb-3">Sample academic and feedback data is already loaded and displayed below!</p>
         <button
-          onClick={handleUpload}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"
+          onClick={loadDemoData}
+          className="bg-white text-blue-600 px-6 py-3 rounded-lg hover:bg-gray-100 font-semibold w-full"
         >
-          Upload & Analyze
+          🔄 Reload Demo Data
         </button>
       </div>
 
       <div className="w-full max-w-2xl bg-white p-6 rounded shadow mb-6">
-        <h2 className="text-xl font-semibold mb-2 text-gray-700">Teacher Feedback Analysis</h2>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => setFeedbackFile(e.target.files[0])}
-          className="mb-2 p-2 border rounded w-full"
-        />
-        <button
-          onClick={handleFeedbackUpload}
-          className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 w-full"
-        >
-          Analyze Feedback
-        </button>
+        <h2 className="text-xl font-semibold mb-2 text-gray-700">Upload Your Own Data (Optional)</h2>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-600 mb-1">Academic CSV</label>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setFile(e.target.files[0])}
+            className="mb-2 p-2 border rounded w-full"
+          />
+          <button
+            onClick={handleUpload}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"
+          >
+            Upload & Analyze Academic Data
+          </button>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Feedback CSV</label>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setFeedbackFile(e.target.files[0])}
+            className="mb-2 p-2 border rounded w-full"
+          />
+          <button
+            onClick={handleFeedbackUpload}
+            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 w-full"
+          >
+            Upload & Analyze Feedback
+          </button>
+        </div>
       </div>
 
       {message && (
