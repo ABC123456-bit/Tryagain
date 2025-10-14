@@ -3,8 +3,8 @@ import { Bar, Pie } from "react-chartjs-2";
 import 'chart.js/auto';
 
 const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5001' 
-  : `https://${window.location.hostname.replace(':5000', ':5001')}`;
+  ? 'http://localhost:8080' 
+  : `https://${window.location.hostname.replace(':5000', ':8080')}`;
 
 function App() {
   const [file, setFile] = useState(null);
