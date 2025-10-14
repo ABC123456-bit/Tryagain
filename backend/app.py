@@ -17,7 +17,16 @@ def upload_file():
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files['file']
-    df = pd.read_csv(file)
+    
+    try:
+        df = pd.read_csv(file)
+    except Exception as e:
+        return jsonify({"error": f"Failed to read CSV file: {str(e)}"}), 400
+
+    required_columns = ['Student_Name', 'Total']
+    missing_columns = [col for col in required_columns if col not in df.columns]
+    if missing_columns:
+        return jsonify({"error": f"CSV must have the following columns: {', '.join(missing_columns)}"}), 400
 
     if 'Attendance' in df.columns and 'Total' in df.columns:
         X = df[['Attendance']]
@@ -33,7 +42,11 @@ def upload_file():
 
     dept_avg = df.groupby('Department')['Total'].mean().round(2).to_dict() if 'Department' in df.columns else {}
 
-    student_scores = df[['Student_Name','Total','Predicted_Total']].to_dict(orient='records') if 'Student_Name' in df.columns else []
+    columns_to_select = ['Student_Name', 'Total']
+    if 'Predicted_Total' in df.columns:
+        columns_to_select.append('Predicted_Total')
+    
+    student_scores = df[columns_to_select].to_dict(orient='records') if 'Student_Name' in df.columns else []
 
     csv_data = df.to_csv(index=False)
 
@@ -55,7 +68,11 @@ def feedback_analysis():
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files['file']
-    df = pd.read_csv(file)
+    
+    try:
+        df = pd.read_csv(file)
+    except Exception as e:
+        return jsonify({"error": f"Failed to read CSV file: {str(e)}"}), 400
 
     if 'Feedback' not in df.columns:
         return jsonify({"error": "CSV must have 'Feedback' column"}), 400

@@ -35,7 +35,8 @@ function App() {
         setStudentScores(data.student_scores);
         setMessage("Academic Analysis Completed!");
       } else {
-        setMessage("Error uploading academic file.");
+        const errorData = await res.json();
+        setMessage(errorData.error || "Error uploading academic file.");
       }
     } catch (error) {
       setMessage("Error connecting to backend. Please ensure the server is running.");
@@ -43,10 +44,19 @@ function App() {
   };
 
   const downloadCSV = () => {
-    if (!studentScores) return;
-    const csvHeader = "Student_Name,Total,Predicted_Total\n";
-    const csvRows = studentScores.map(s => `${s.Student_Name},${s.Total},${s.Predicted_Total || ''}`).join("\n");
-    const csvContent = csvHeader + csvRows;
+    if (!studentScores || studentScores.length === 0) return;
+    
+    const hasPredictions = studentScores.some(s => s.Predicted_Total !== undefined);
+    const headers = hasPredictions 
+      ? "Student_Name,Total,Predicted_Total\n"
+      : "Student_Name,Total\n";
+    
+    const csvRows = studentScores.map(s => {
+      const row = `${s.Student_Name},${s.Total}`;
+      return hasPredictions ? `${row},${s.Predicted_Total || ''}` : row;
+    }).join("\n");
+    
+    const csvContent = headers + csvRows;
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -73,7 +83,8 @@ function App() {
         setFeedbackSentiments(data.sentiments);
         setMessage("Feedback Analysis Completed!");
       } else {
-        setMessage("Error uploading feedback file.");
+        const errorData = await res.json();
+        setMessage(errorData.error || "Error uploading feedback file.");
       }
     } catch (error) {
       setMessage("Error connecting to backend. Please ensure the server is running.");
