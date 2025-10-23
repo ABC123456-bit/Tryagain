@@ -1,9 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from textblob import TextBlob
 
+# Initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
@@ -17,7 +18,6 @@ def upload_file():
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files['file']
-    
     try:
         df = pd.read_csv(file)
     except Exception as e:
@@ -45,14 +45,14 @@ def upload_file():
     columns_to_select = ['Student_Name', 'Total']
     if 'Predicted_Total' in df.columns:
         columns_to_select.append('Predicted_Total')
-    
+
     student_scores = df[columns_to_select].to_dict(orient='records') if 'Student_Name' in df.columns else []
 
     csv_data = df.to_csv(index=False)
 
     return jsonify({
         "kpis": {
-            "average_marks": round(avg_marks,2),
+            "average_marks": round(avg_marks, 2),
             "pass_count": pass_count,
             "fail_count": fail_count,
             "total_students": total_students
@@ -68,7 +68,6 @@ def feedback_analysis():
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files['file']
-    
     try:
         df = pd.read_csv(file)
     except Exception as e:
@@ -77,19 +76,19 @@ def feedback_analysis():
     if 'Feedback' not in df.columns:
         return jsonify({"error": "CSV must have 'Feedback' column"}), 400
 
-    sentiments = {"positive":0, "neutral":0, "negative":0}
+    sentiments = {"positive": 0, "neutral": 0, "negative": 0}
     df['Sentiment'] = ""
     for i, feedback in enumerate(df['Feedback']):
         analysis = TextBlob(str(feedback))
         if analysis.sentiment.polarity > 0.1:
             sentiments['positive'] += 1
-            df.at[i,'Sentiment'] = "Positive"
+            df.at[i, 'Sentiment'] = "Positive"
         elif analysis.sentiment.polarity < -0.1:
             sentiments['negative'] += 1
-            df.at[i,'Sentiment'] = "Negative"
+            df.at[i, 'Sentiment'] = "Negative"
         else:
             sentiments['neutral'] += 1
-            df.at[i,'Sentiment'] = "Neutral"
+            df.at[i, 'Sentiment'] = "Neutral"
 
     csv_data = df.to_csv(index=False)
     return jsonify({
@@ -121,12 +120,12 @@ def demo_academic():
     columns_to_select = ['Student_Name', 'Total']
     if 'Predicted_Total' in df.columns:
         columns_to_select.append('Predicted_Total')
-    
+
     student_scores = df[columns_to_select].to_dict(orient='records') if 'Student_Name' in df.columns else []
 
     return jsonify({
         "kpis": {
-            "average_marks": round(avg_marks,2),
+            "average_marks": round(avg_marks, 2),
             "pass_count": pass_count,
             "fail_count": fail_count,
             "total_students": total_students
@@ -145,7 +144,7 @@ def demo_feedback():
     if 'Feedback' not in df.columns:
         return jsonify({"error": "Demo data missing 'Feedback' column"}), 500
 
-    sentiments = {"positive":0, "neutral":0, "negative":0}
+    sentiments = {"positive": 0, "neutral": 0, "negative": 0}
     for feedback in df['Feedback']:
         analysis = TextBlob(str(feedback))
         if analysis.sentiment.polarity > 0.1:
@@ -158,26 +157,16 @@ def demo_feedback():
     return jsonify({
         "sentiments": sentiments
     })
+# Serve React frontend
+@app.route('/')
+def serve_index():
+    return send_from_directory('../frontend/build', 'index.html')
 
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('../frontend/build', path)
+
+
+# Run the app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)from flask import Flask, send_from_directory, jsonify
-from flask_cors import CORS
-
-app = Flask(__name__, static_folder="../frontend")
-CORS(app)
-
-@app.route("/api/message")
-def api_message():
-    return jsonify({"message": "AI Academic Analytics Backend Running!"})
-
-@app.route("/")
-def index():
-    return send_from_directory(app.static_folder, "index.html")
-
-@app.route("/<path:path>")
-def static_files(path):
-    return send_from_directory(app.static_folder, path)
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
+    app.run(host='0.0.0.0', port=8080, debug=True)
