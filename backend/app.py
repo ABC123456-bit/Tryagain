@@ -6,7 +6,7 @@ from textblob import TextBlob
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(app origins=["https://academic-ikcm-l849idyqk-abc123456-bits-projects.vercel.app"])
 
 @app.route('/')
 def home():

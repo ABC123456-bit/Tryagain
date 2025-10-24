@@ -13,10 +13,13 @@ function FeedbackForm() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://127.0.0.1:8080/feedback", {
-        method: "POST",
-        body: formData,
-      });
+      fetch("https://academic10.onrender.com/feedback", {
+  method: "POST",
+  body: formData,
+});
+
+
+
       const data = await response.json();
       setResult(data);
     } catch (err) {

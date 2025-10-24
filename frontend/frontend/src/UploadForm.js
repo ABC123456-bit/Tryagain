@@ -13,10 +13,17 @@ function UploadForm() {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://127.0.0.1:8080/upload", {
-        method: "POST",
-        body: formData,
-      });
+const API = process.env.REACT_APP_API_URL;
+
+fetch("https://academic10.onrender.com/upload", {
+  method: "POST",
+  body: formData,
+});
+
+
+
+
+
       const data = await response.json();
       setResult(data);
     } catch (err) {
