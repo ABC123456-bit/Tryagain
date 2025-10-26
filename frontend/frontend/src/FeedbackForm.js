@@ -13,10 +13,13 @@ function FeedbackForm() {
     formData.append("file", file);
 
     try {
-      fetch("https://academic10.onrender.com/feedback", {
+      
+      fetch("https://my-backend-pq6d.onrender.com/analyze", {
   method: "POST",
-  body: formData,
+  body: formData
 });
+
+
 
 
 

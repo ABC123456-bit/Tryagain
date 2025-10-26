@@ -15,10 +15,12 @@ function UploadForm() {
     try {
 const API = process.env.REACT_APP_API_URL;
 
-fetch("https://academic10.onrender.com/upload", {
+fetch("https://my-backend-pq6d.onrender.com/analyze", {
   method: "POST",
-  body: formData,
+  body: formData
 });
+
+
 
 
 
